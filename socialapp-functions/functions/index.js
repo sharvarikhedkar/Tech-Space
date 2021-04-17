@@ -71,6 +71,7 @@ app.post('/signup', (req, res) => {
   };
 
   //Validate user handle 
+  let token;
   db.doc(`/users/${newUser.handle}`).get() 
     .then(doc => {
       if(doc.exists){
@@ -81,10 +82,22 @@ app.post('/signup', (req, res) => {
 
     })
     .then(data => {
+      userId = data.user.uid;
       return data.user.getIdToken();
     })
-    //return auth token
-    .then(token => {
+    //return user credentials
+    .then((idToken) => {
+      token = idToken;
+      const userCredentials = {
+        handle: newUser.handle,
+        email: newUser.email,
+        createdAt: new Date().toISOString(),
+        userId
+      };
+      //persist user credentials in users collection 
+      return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+    })
+    .then(() => {
       return res.status(201).json({ token });
     })
     .catch((err) => {
