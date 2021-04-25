@@ -48,7 +48,7 @@ exports.postOneScream = (req, res) => {
     });
 };
 
-// get a scream and its details
+// fetch one scream
 exports.getScream = (req, res) => {
   let screamData = {};
   db.doc(`/screams/${req.params.screamId}`)
@@ -77,3 +77,31 @@ exports.getScream = (req, res) => {
       res.status(500).json({ error: err.code });
     });
 };
+
+//post a comment on a scream to firebase
+exports.commentOnScream = (req,res) => {
+  if(req.body.body.trim() === '') return res.status(400).json({ error: 'Must not be empty'});
+  
+  const newComment = {
+    body: req.body.body,
+    createdAt: new Date().toISOString(),
+    screamId: req.params.screamId,
+    userHandle: req.user.handle,
+    userImage: req.user.imageUrl 
+  };
+  //check if the scream exists
+  db.doc(`/screams/${req.params.screamId}`).get()
+    .then((doc) => {
+      if(!doc.exists){
+        return res.status(404).json({ error: 'Scream not found' });
+      }
+      return db.collection('comments').add(newComment);
+    })
+    .then(() => {
+      res.json(newComment)
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({error: 'Something went wrong'});
+    })
+}   

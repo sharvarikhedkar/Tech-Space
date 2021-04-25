@@ -34,6 +34,7 @@ module.exports = (req, res, next) => {
       .then((data) => {
         //.data() extracts data from this document
         req.user.handle = data.docs[0].data().handle;
+        req.user.imageUrl = data.docs[0].data().imageURL;
         return next();
       })
       .catch((err) => {
